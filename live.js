@@ -39,7 +39,7 @@
       LAUNCHES.push({
         tk: TICKER(l.ticker), mint: WALLET.test(String(l.mint)) ? l.mint : "", launchedTs: Date.parse(String(l.launched_at || "")) || 0, seat: N(l.seat), daysAgo: Math.max(0, N(l.day)), launchCap: N(l.launch_cap_usd) || 1, peakCap: (N(l.peak_multiple) || 1) * (N(l.launch_cap_usd) || 1), nowCap: N(l.mcap_usd),
         peakAt: 0.5, holders: N(l.holders), dev: N(l.dev_allocation_pct), lp: S(l.liquidity, 40) || "unknown", insiders: wallets.map((w) => [w.label, w.pct]), insiderWallets: wallets, devName: S(l.developer, 32),
-        removed: l.status === "slashed", slashed: l.slashed && typeof l.slashed === "object" ? { day: N(l.slashed.day), what: "slashed on the record", payout: N(l.slashed.payout_sol), holders: N(l.slashed.holders_paid) } : undefined, slashId: l.slashed && /^[0-9a-f-]{36}$/.test(String(l.slashed.id || "")) ? l.slashed.id : null,
+        removed: l.status === "banned", slashed: l.banned && typeof l.banned === "object" ? { day: N(l.banned.day), what: S(l.banned.reason, 140) || "banned on the record", payout: 0, holders: 0 } : undefined,
         d7: ["filed", "due", "late", "missing"].includes(l.reports && l.reports.d7) ? l.reports.d7 : "due", d30: ["filed", "due", "late", "missing"].includes(l.reports && l.reports.d30) ? l.reports.d30 : "due", walletFull: WALLET.test(String(l.mint)) ? l.mint : "",
       }); });
     // slots → SAMPLE_SLOTS shape (offset from today, hour, seat)
@@ -49,7 +49,7 @@
     // bench
     BENCH.length = 0; A(pad.bench).slice(0, 12).forEach((name, i) => BENCH.push({ name: S(name, 32) || "—", status: "passed", passedDaysAgo: 0, prior: 0, flags: 0, pre: 100 - i * 4 }));
     // pad constants that the page derives otherwise
-    PAD.liveProtection = N(pad.protection_pool_sol); PAD.liveTreasury = N(pad.treasury_sol);
+    PAD.liveTreasury = N(pad.treasury_sol);
     window.__padLive = pad; window.__logLive = A(log);
     renderAll();
     // real 30-day histories replace the generated ones
@@ -64,6 +64,6 @@
   // live scanner — the address is validated before it leaves the browser
   window.__scanLive = async (q) => { if (!WALLET.test(String(q))) throw new Error("not a Solana address"); return get("/v1/scan/" + encodeURIComponent(q)); };
   window.__twentyReload = () => load().catch(() => {});
-  load().then(() => { toast("Live data from " + base.replace(/^https?:\/\//, ""), "good"); status(); setInterval(() => load().catch(() => {}), 60000); setInterval(status, 60000); })
+  load().then(() => { document.querySelectorAll('.top .demo').forEach((e) => { e.style.display = 'none'; }); toast("Live data from " + base.replace(/^https?:\/\//, ""), "good"); status(); setInterval(() => load().catch(() => {}), 60000); setInterval(status, 60000); })
         .catch((e) => { console.error(e); toast("Live API unreachable, showing the preview data.", "warn"); });
 })();
